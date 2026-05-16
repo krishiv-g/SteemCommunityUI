@@ -1,0 +1,240 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 80 8% 92%;
+    --foreground: 160 60% 8%;
+
+    --card: 80 10% 94%;
+    --card-foreground: 160 60% 8%;
+
+    --popover: 80 10% 94%;
+    --popover-foreground: 160 60% 8%;
+
+    --primary: 160 70% 15%;
+    --primary-foreground: 80 20% 97%;
+
+    --secondary: 122 52% 33%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 80 6% 87%;
+    --muted-foreground: 160 15% 40%;
+
+    --accent: 122 38% 74%;
+    --accent-foreground: 160 70% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 80 8% 83%;
+    --input: 80 8% 83%;
+    --ring: 160 70% 15%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 80 10% 94%;
+    --sidebar-foreground: 160 60% 8%;
+    --sidebar-primary: 160 70% 15%;
+    --sidebar-primary-foreground: 80 20% 97%;
+    --sidebar-accent: 122 38% 74%;
+    --sidebar-accent-foreground: 160 70% 10%;
+    --sidebar-border: 80 8% 83%;
+    --sidebar-ring: 160 70% 15%;
+
+    /* Custom tokens */
+    --surface: 80 8% 95%;
+    --surface-elevated: 0 0% 97%;
+    --gradient-primary: linear-gradient(135deg, hsl(160 70% 15%), hsl(122 52% 33%));
+    --gradient-accent: linear-gradient(135deg, hsl(122 38% 74% / 0.3), hsl(80 20% 97%));
+    --shadow-soft: 0 2px 16px -4px hsl(160 70% 15% / 0.08);
+    --shadow-elevated: 0 8px 32px -8px hsl(160 70% 15% / 0.12);
+    --font-heading: 'Space Grotesk', system-ui, sans-serif;
+    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+
+  .dark {
+    --background: 150 25% 8%;
+    --foreground: 80 10% 85%;
+
+    --card: 150 20% 11%;
+    --card-foreground: 80 10% 85%;
+
+    --popover: 150 20% 11%;
+    --popover-foreground: 80 10% 85%;
+
+    --primary: 122 38% 60%;
+    --primary-foreground: 150 25% 8%;
+
+    --secondary: 122 30% 25%;
+    --secondary-foreground: 80 10% 85%;
+
+    --muted: 150 15% 15%;
+    --muted-foreground: 80 10% 55%;
+
+    --accent: 122 30% 25%;
+    --accent-foreground: 80 10% 85%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 150 15% 18%;
+    --input: 150 15% 18%;
+    --ring: 122 38% 60%;
+
+    --sidebar-background: 150 20% 11%;
+    --sidebar-foreground: 80 10% 85%;
+    --sidebar-primary: 122 38% 60%;
+    --sidebar-primary-foreground: 150 25% 8%;
+    --sidebar-accent: 122 30% 25%;
+    --sidebar-accent-foreground: 80 10% 85%;
+    --sidebar-border: 150 15% 18%;
+    --sidebar-ring: 122 38% 60%;
+
+    --surface: 150 20% 10%;
+    --surface-elevated: 150 20% 13%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Ensure colorful emoji rendering */
+  .emoji, [data-emoji] {
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif;
+    font-style: normal;
+    line-height: 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-primary);
+  }
+
+  .glass-panel {
+    @apply bg-card/80 backdrop-blur-md border border-border/50;
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .reading-width {
+    @apply max-w-[720px] mx-auto;
+  }
+}
+
+/* MD Editor theming */
+.md-editor-themed.w-md-editor {
+  --color-canvas-default: hsl(var(--card)) !important;
+  --color-fg-default: hsl(var(--foreground)) !important;
+  --color-border-default: hsl(var(--border)) !important;
+  --color-canvas-subtle: hsl(var(--muted)) !important;
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--foreground)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 0.75rem !important;
+  overflow: hidden;
+  font-family: var(--font-body), sans-serif !important;
+}
+
+.md-editor-themed .w-md-editor-toolbar {
+  background-color: hsl(var(--muted)) !important;
+  border-bottom: 1px solid hsl(var(--border)) !important;
+}
+
+.md-editor-themed .w-md-editor-toolbar li > button {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.md-editor-themed .w-md-editor-toolbar li > button:hover {
+  color: hsl(var(--foreground)) !important;
+}
+
+.md-editor-themed .w-md-editor-text-input,
+.md-editor-themed .w-md-editor-text-pre,
+.md-editor-themed .w-md-editor-text-pre > code,
+.md-editor-themed .w-md-editor-text textarea {
+  color: hsl(var(--foreground)) !important;
+  font-size: 0.95rem !important;
+}
+
+.md-editor-themed .wmde-markdown {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--foreground)) !important;
+  font-family: var(--font-body), sans-serif !important;
+}
+
+.md-editor-themed .w-md-editor-preview {
+  border-left: 1px solid hsl(var(--border)) !important;
+}
+
+/* Standalone preview theming */
+.md-preview-themed.wmde-markdown {
+  background-color: transparent !important;
+  color: hsl(var(--foreground)) !important;
+  font-family: var(--font-body), sans-serif !important;
+}
+
+.md-preview-themed.wmde-markdown code {
+  background-color: hsl(var(--muted)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.md-preview-themed.wmde-markdown pre {
+  background-color: hsl(var(--muted)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 0.5rem !important;
+}
+
+.md-preview-themed.wmde-markdown blockquote {
+  border-left: 3px solid hsl(var(--primary)) !important;
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.md-preview-themed.wmde-markdown a {
+  color: hsl(var(--primary)) !important;
+}
+
+.md-preview-themed.wmde-markdown h1,
+.md-preview-themed.wmde-markdown h2,
+.md-preview-themed.wmde-markdown h3,
+.md-preview-themed.wmde-markdown h4 {
+  color: hsl(var(--foreground)) !important;
+  font-family: var(--font-heading), sans-serif !important;
+  border-bottom: 1px solid hsl(var(--border)) !important;
+}
+
+.md-preview-themed.wmde-markdown hr {
+  border-color: hsl(var(--border)) !important;
+}
+
+.md-preview-themed.wmde-markdown table tr {
+  background-color: transparent !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.md-preview-themed.wmde-markdown table th,
+.md-preview-themed.wmde-markdown table td {
+  border-color: hsl(var(--border)) !important;
+}
