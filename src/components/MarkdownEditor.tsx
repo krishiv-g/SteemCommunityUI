@@ -1,9 +1,8 @@
 import { useState, useRef, useCallback } from 'react';
 import MDEditor, { commands, ICommand } from '@uiw/react-md-editor';
-import { ImagePlus, Smile, Eye, EyeOff, ChevronUp, ChevronDown } from 'lucide-react';
+import { ImagePlus, Smile } from 'lucide-react';
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
-import MarkdownPreview from '@uiw/react-markdown-preview';
 
 interface MarkdownEditorProps {
   value: string;
@@ -13,9 +12,8 @@ interface MarkdownEditorProps {
 }
 
 export function MarkdownEditor({ value, onChange, height = 400 }: MarkdownEditorProps) {
-  const responsiveHeight = Math.max(height, typeof window !== 'undefined' ? Math.round(window.innerHeight * 0.6) : height);
+  const responsiveHeight = typeof window !== 'undefined' ? Math.max(height, Math.round(window.innerHeight * 0.55)) : height;
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
 
@@ -106,29 +104,6 @@ export function MarkdownEditor({ value, onChange, height = 400 }: MarkdownEditor
           extraCommands={[]}
         />
       </div>
-
-      {/* Collapsible preview below */}
-      <button
-        type="button"
-        onClick={() => setShowPreview(prev => !prev)}
-        className="flex items-center gap-1.5 w-full px-4 py-2 rounded-b-xl bg-muted border border-t-0 border-border text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-      >
-        {showPreview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-        {showPreview ? 'Hide Preview' : 'Show Preview'}
-        {showPreview ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />}
-      </button>
-
-      {showPreview && (
-        <div className="rounded-xl border border-border bg-card p-6 overflow-auto" style={{ maxHeight: responsiveHeight * 0.6 }}>
-          <div data-color-mode="auto">
-            <MarkdownPreview
-              source={value || '*Nothing to preview yet...*'}
-              className="md-preview-themed"
-              style={{ backgroundColor: 'transparent', color: 'inherit' }}
-            />
-          </div>
-        </div>
-      )}
 
       {showEmojiPicker && (
         <>

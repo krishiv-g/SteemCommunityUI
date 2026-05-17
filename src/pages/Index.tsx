@@ -3,30 +3,35 @@ import { useSearchParams, Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { ArticleCard } from "@/components/ArticleCard";
 import { ArticleCardSkeleton } from "@/components/ArticleCardSkeleton";
-import { TagChip } from "@/components/TagChip";
-import { HempLogo } from "@/components/HempLogo";
-import { api } from "@/services";
-import type { Post, Tag } from "@/services/api.interface";
-import { TrendingUp, Clock, Star, Flame, PenTool } from "lucide-react";
+import type { Post } from "@/services/api.interface";
+import { TrendingUp, Users, Star, Flame, Clock, ChevronRight, Hash } from "lucide-react";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { fetchRankedPosts, fetchPinnedPosts } from "@/services/steem.posts";
 import { useAppStore } from "@/store/useAppStore";
+import { getAvatarUrl } from "@/services/avatar";
 import { fetchAccounts, type SteemProfile } from "@/services/steem.accounts";
-import { communityConfig } from "@/config/community";
-
 
 type FeedTab = "featured" | "trending" | "hot" | "latest";
+
+const tabs = [
+  { key: "featured" as FeedTab, label: "Featured", icon: Star },
+  { key: "trending" as FeedTab, label: "Trending", icon: TrendingUp },
+  { key: "hot" as FeedTab, label: "Hot", icon: Flame },
+  { key: "latest" as FeedTab, label: "Latest", icon: Clock },
+];
 
 export default function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const validTabs: FeedTab[] = ["featured", "trending", "hot", "latest"];
-  const initialTab = validTabs.includes(searchParams.get("tab") as FeedTab) ? (searchParams.get("tab") as FeedTab) : "featured";
+  const initialTab = validTabs.includes(searchParams.get("tab") as FeedTab)
+    ? (searchParams.get("tab") as FeedTab)
+    : "featured";
+
   const { currentUser } = useAppStore();
   const [posts, setPosts] = useState<Post[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<FeedTab>(initialTab);
-  const [pinnedAuthors, setPinnedAuthors] = useState<SteemProfile[]>([]);
+  const [topAuthors, setTopAuthors] = useState<SteemProfile[]>([]);
   const [authorTitles, setAuthorTitles] = useState<Map<string, string>>(new Map());
 
   const changeTab = (newTab: FeedTab) => {
@@ -34,10 +39,7 @@ export default function HomePage() {
     setSearchParams(newTab === "trending" ? {} : { tab: newTab }, { replace: true });
   };
 
-  // Fetch sidebar data once
   useEffect(() => {
-    api.getTags().then(setTags);
-
     fetchPinnedPosts().then(async (pinned) => {
       const countMap = new Map<string, number>();
       const titleMap = new Map<string, string>();
@@ -47,140 +49,129 @@ export default function HomePage() {
           titleMap.set(p.author.username, p.author.communityTitle);
         }
       });
-      const sorted = [...countMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4);
+      const sorted = [...countMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
       const usernames = sorted.map(([u]) => u);
       if (usernames.length > 0) {
         const profiles = await fetchAccounts(usernames);
         const profileMap = new Map(profiles.map((p) => [p.account, p]));
-        setPinnedAuthors(usernames.map((u) => profileMap.get(u)!).filter(Boolean));
+        setTopAuthors(usernames.map((u) => profileMap.get(u)!).filter(Boolean));
         setAuthorTitles(titleMap);
       }
     }).catch(() => {});
   }, []);
 
-  // Fetch posts based on tab selection — all tabs use real Steem API
   useEffect(() => {
     setLoading(true);
-
     if (tab === "featured") {
       fetchPinnedPosts(currentUser?.username)
         .then((p) => { setPosts(p); setLoading(false); })
         .catch(() => { setPosts([]); setLoading(false); });
     } else {
-      const sortMap: Record<string, string> = {
-        trending: "trending",
-        hot: "hot",
-        latest: "created",
-      };
+      const sortMap: Record<string, string> = { trending: "trending", hot: "hot", latest: "created" };
       fetchRankedPosts(sortMap[tab] as any, 20, currentUser?.username)
         .then((p) => { setPosts(p); setLoading(false); })
         .catch(() => { setPosts([]); setLoading(false); });
     }
   }, [tab, currentUser?.username]);
 
-  const { visibleItems, loadingMore, hasMore, sentinelRef } = useInfiniteScroll({
-    items: posts,
-    pageSize: 4,
-  });
+  const { visibleItems, loadingMore, hasMore, sentinelRef } = useInfiniteScroll({ items: posts, pageSize: 6 });
 
-  const featured = visibleItems[0];
-  const rest = visibleItems.slice(1);
-
+  /* ── Right Sidebar ─────────────────────────────────────────────── */
   const sidebar = (
     <>
-      <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
-        <h3 className="font-heading font-bold text-sm text-foreground flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-secondary" /> Trending Tags
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {tags
-            .filter((t) => t.trending)
-            .map((t) => (
-              <TagChip key={t.name} name={t.name} count={t.postCount} size="sm" />
-            ))}
-        </div>
-      </div>
-      {pinnedAuthors.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="font-heading font-bold text-sm text-foreground flex items-center gap-2">
-            <PenTool className="h-4 w-4 text-primary" /> Top Creators
+      {/* Top contributors */}
+      {topAuthors.length > 0 && (
+        <div className="rounded-lg bg-card border border-border p-4 space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+            <Users className="h-3.5 w-3.5 text-primary" /> Top Contributors
           </h3>
-          {pinnedAuthors.map((profile) => (
-            <Link
-              key={profile.account}
-              to={`/user/${profile.account}`}
-              className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
-            >
-              <img
-                src={profile.profileImage}
-                alt=""
-                className="h-10 w-10 rounded-full border-2 border-accent object-cover"
-                onError={(e) => { (e.target as HTMLImageElement).src = `https://steemitimages.com/u/${profile.account}/avatar`; }}
-              />
-              <div className="min-w-0">
-                <p className="font-bold text-sm text-foreground truncate">{profile.name}</p>
-                <p className="text-xs text-muted-foreground">{authorTitles.get(profile.account) || `@${profile.account}`}</p>
-              </div>
-            </Link>
-          ))}
+          <div className="space-y-2">
+            {topAuthors.map((profile) => (
+              <Link
+                key={profile.account}
+                to={`/user/${profile.account}`}
+                className="flex items-center gap-3 py-1.5 px-2 -mx-2 rounded-md hover:bg-muted/60 transition-colors group"
+              >
+                <img
+                  src={getAvatarUrl(profile.account)}
+                  alt=""
+                  className="h-8 w-8 rounded-full object-cover border border-border group-hover:border-primary/40 transition-colors shrink-0"
+                />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">{profile.name || profile.account}</p>
+                  <p className="text-xs text-muted-foreground font-mono truncate">
+                    {authorTitles.get(profile.account) || `@${profile.account}`}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <Link
+            to="/community"
+            className="flex items-center gap-1 text-xs text-primary hover:underline mt-1"
+          >
+            View all members <ChevronRight className="h-3 w-3" />
+          </Link>
         </div>
       )}
+
     </>
   );
 
   return (
     <Layout sidebar={sidebar}>
-      {/* Tagline */}
-      <p className="mb-6 text-muted-foreground text-lg">{communityConfig.tagline}</p>
-
-      {/* Tabs */}
-      <div className="flex gap-1 mb-6 p-1 rounded-lg bg-muted w-fit mx-auto sm:mx-0">
-        {(
-          [
-            { key: "featured", label: "Featured", icon: Star },
-            { key: "trending", label: "Trending", icon: TrendingUp },
-            { key: "hot", label: "Hot", icon: Flame },
-            { key: "latest", label: "Latest", icon: Clock },
-          ] as const
-        ).map(({ key, label, icon: Icon }) => (
-          <button
-            key={key}
-            onClick={() => changeTab(key)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              tab === key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Icon className="h-3.5 w-3.5" />
-            {label}
-          </button>
-        ))}
+      {/* Feed header */}
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-lg font-heading font-bold text-foreground">Developer Feed</h1>
+        <div className="flex items-center gap-0.5 bg-muted/60 rounded-lg p-0.5">
+          {tabs.map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => changeTab(key)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                tab === key
+                  ? 'bg-card text-foreground shadow-soft'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Icon className="h-3 w-3" />
+              <span className="hidden sm:inline">{label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
+      {/* Posts */}
       {loading ? (
-        <div className="space-y-6">
-          <ArticleCardSkeleton />
-          <div className="grid gap-6 sm:grid-cols-2">
-            <ArticleCardSkeleton />
-            <ArticleCardSkeleton />
-          </div>
+        <div className="space-y-0 sm:space-y-3">
+          {[...Array(4)].map((_, i) => <ArticleCardSkeleton key={i} />)}
         </div>
       ) : (
-        <div className="space-y-0 sm:space-y-6">
-          <div className="-mx-3 sm:mx-0">{featured && <ArticleCard post={featured} variant="featured" index={0} fromLabel={tab.charAt(0).toUpperCase() + tab.slice(1)} />}</div>
-          <div className="grid gap-0 sm:gap-6 sm:grid-cols-2">
-            {rest.map((post, i) => (
-              <ArticleCard key={post.id} post={post} index={i + 1} fromLabel={tab.charAt(0).toUpperCase() + tab.slice(1)} />
-            ))}
-          </div>
+        <div className="space-y-0 sm:space-y-3">
+          {visibleItems.map((post, i) => (
+            <ArticleCard
+              key={post.id}
+              post={post}
+              variant={i === 0 && tab === 'featured' ? 'featured' : 'default'}
+              index={i}
+              fromLabel={tab.charAt(0).toUpperCase() + tab.slice(1)}
+            />
+          ))}
 
-          {/* Infinite scroll skeleton + sentinel */}
           {loadingMore && (
-            <div className="grid gap-6 sm:grid-cols-2">
+            <div className="space-y-3">
               <ArticleCardSkeleton />
               <ArticleCardSkeleton />
             </div>
           )}
-          {hasMore && <div ref={sentinelRef} className="h-4" />}
+          {hasMore && <div ref={sentinelRef} className="h-2" />}
+
+          {!loading && visibleItems.length === 0 && (
+            <div className="text-center py-16 text-muted-foreground">
+              <Hash className="h-10 w-10 mx-auto mb-3 opacity-20" />
+              <p className="text-sm">No posts found. Check back soon!</p>
+            </div>
+          )}
         </div>
       )}
     </Layout>

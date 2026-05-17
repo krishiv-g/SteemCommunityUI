@@ -4,15 +4,15 @@ const BOT_AGENTS =
   /twitterbot|facebookexternalhit|facebot|whatsapp|telegrambot|telegram|linkedinbot|discordbot|slackbot|applebot|googlebot|bingbot|pinterest|embedly|rogerbot|quora|outbrain|W3C_Validator|ia_archiver|semrushbot|ahrefsbot/i;
 
 const RPC_NODES = [
-  "https://api.steemit.com",
-  "https://api.justyy.com",
+  "https://rpc-node1.example.com",
+  "https://rpc-node2.example.com",
 ];
 
-const SITE_NAME = "World of Xpilar";
-const SITE_URL = Deno.env.get("SITE_URL") || "https://worldofxpilar.com";
-const COMMUNITY_ID = Deno.env.get("COMMUNITY_ID") || "hive-185836";
-// PNG — required by all crawlers (SVG not supported for OG images)
-const LOGO_IMAGE = `${SITE_URL}/favicon_io/android-chrome-512x512.png`;
+const SITE_NAME = "SteemDev";
+const SITE_URL = Deno.env.get("SITE_URL") || "https://your-site.example.com";
+const COMMUNITY_ID = Deno.env.get("COMMUNITY_ID") || "hive-xxxxx";
+// Use DiceBear logo for OG images (SVG not supported by some crawlers)
+const LOGO_IMAGE = Deno.env.get("VITE_COMMUNITY_LOGO") || "https://api.dicebear.com/9.x/bottts-neutral/svg?seed=xxxxx";
 const FALLBACK_IMAGE = LOGO_IMAGE;
 
 function escapeHtml(str: string): string {
@@ -91,7 +91,7 @@ function parseProfile(raw: any) {
   const rawImage = profile.profile_image || "";
   const profileImage = rawImage
     ? toHttps(rawImage)
-    : `https://cdn.steemitimages.com/DQmb4HMmFjnPZwq9qnzFLSZtXGZCwdMKqbfpE2P3exQSAbN/default-avatar.png`;
+    : `https://api.dicebear.com/9.x/bottts-neutral/svg?seed=xxxxx`;
 
   return {
     name: profile.name || raw.name,
@@ -151,7 +151,7 @@ export default async function handler(req: Request, context: Context) {
 
     if (!post) {
       return new Response(
-        buildHtml({ title: SITE_NAME, description: "World of Xpilar — a Steem community.", image: FALLBACK_IMAGE, url: postUrl }),
+        buildHtml({ title: SITE_NAME, description: "SteemDev — A developer community on Steem blockchain.", image: FALLBACK_IMAGE, url: postUrl }),
         { headers: { "Content-Type": "text/html;charset=utf-8" } }
       );
     }
@@ -184,7 +184,7 @@ export default async function handler(req: Request, context: Context) {
 
     if (!raw) {
       return new Response(
-        buildHtml({ title: SITE_NAME, description: "World of Xpilar — a Steem community.", image: FALLBACK_IMAGE, url: profileUrl }),
+        buildHtml({ title: SITE_NAME, description: "SteemDev — A developer community on Steem blockchain.", image: FALLBACK_IMAGE, url: profileUrl }),
         { headers: { "Content-Type": "text/html;charset=utf-8" } }
       );
     }
@@ -193,7 +193,7 @@ export default async function handler(req: Request, context: Context) {
     const image = profile.profileImage || profile.coverImage || FALLBACK_IMAGE;
     const description = profile.about
       ? profile.about.slice(0, 200)
-      : `View @${username}'s profile on World of Xpilar.`;
+      : `View @${username}'s profile on SteemDev.`;
 
     return new Response(
       buildHtml({
@@ -215,7 +215,7 @@ export default async function handler(req: Request, context: Context) {
 
     if (!community) {
       return new Response(
-        buildHtml({ title: SITE_NAME, description: "World of Xpilar — a Steem community.", image: LOGO_IMAGE, url: communityUrl }),
+        buildHtml({ title: SITE_NAME, description: "SteemDev — A developer community on Steem blockchain.", image: LOGO_IMAGE, url: communityUrl }),
         { headers: { "Content-Type": "text/html;charset=utf-8" } }
       );
     }

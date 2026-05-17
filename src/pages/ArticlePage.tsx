@@ -85,7 +85,7 @@ export default function ArticlePage() {
 
           <div className="flex items-center gap-4">
             <Link to={`/user/${post.author.username}`} className="flex items-center gap-3 group">
-              <img src={post.author.avatar} alt="" className="h-10 w-10 rounded-full" />
+              <img src={post.author.avatar} alt="" className="h-12 w-12 rounded-full" />
               <div>
                 <div className="flex items-center gap-2">
                   <p className="font-bold text-foreground group-hover:text-primary transition-colors">{post.author.displayName}</p>

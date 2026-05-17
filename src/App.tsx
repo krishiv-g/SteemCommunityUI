@@ -23,7 +23,6 @@ import CreateForumPage from "./pages/CreateForumPage.tsx";
 import PollsPage from "./pages/PollsPage.tsx";
 import PollDetailPage from "./pages/PollDetailPage.tsx";
 import CreatePollPage from "./pages/CreatePollPage.tsx";
-import ChatPage from "./pages/ChatPage.tsx";
 import { Navbar } from "./components/Navbar.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -58,7 +57,6 @@ const App = () => (
             <Route path="/polls" element={<PollsPage />} />
             <Route path="/polls/new" element={<CreatePollPage />} />
             <Route path="/polls/:id" element={<PollDetailPage />} />
-            <Route path="/chat" element={<ChatPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </div>

@@ -3,7 +3,57 @@ import { steemRpc } from './steem.rpc';
 import { fetchAccounts, fetchFollowCount } from './steem.accounts';
 import { fetchRankedPosts, fetchAccountPosts, type RankedSort } from './steem.posts';
 import { fetchComments } from './steem.comments';
+import { getAvatarUrl } from './avatar';
 import { fetchCommunity } from './steem.community';
+
+interface RawNotification {
+  id: number;
+  time: number;         // Unix timestamp (seconds)
+  type: string;         // "vote" | "mention" | "reply" | "follow" | "resteem"
+  is_read: number;      // 0 = unread, 1 = read
+  account: string;      // actor (who triggered the notification)
+  author: string;       // post author (empty for follows)
+  permlink: string;     // post permlink (empty for follows)
+  link_depth: number;
+  voted_rshares: number;
+}
+
+function buildMessage(type: string): string {
+  switch (type) {
+    case 'vote':    return 'voted on your post';
+    case 'mention': return 'mentioned you in a post';
+    case 'reply':   return 'replied to your post';
+    case 'follow':  return 'followed you';
+    case 'resteem': return 'resteemed your post';
+    default:        return type;
+  }
+}
+
+function mapNotification(raw: RawNotification): Notification {
+  const actor: User = {
+    id: raw.account,
+    username: raw.account,
+    displayName: raw.account,
+    avatar: getAvatarUrl(raw.account),
+    bio: '', followers: 0, following: 0, postCount: 0,
+    joinedDate: '', reputation: 0, steemPower: 0,
+    steemBalance: 0, sbdBalance: 0,
+  };
+
+  const postId = raw.author && raw.permlink
+    ? `${raw.author}/${raw.permlink}`
+    : undefined;
+
+  return {
+    id: String(raw.id),
+    type: raw.type as Notification['type'],
+    actor,
+    postId,
+    message: buildMessage(raw.type),
+    createdAt: new Date(raw.time * 1000).toISOString(),
+    read: raw.is_read === 1,
+  };
+}
 
 interface RawAccount {
   name: string;
@@ -53,7 +103,7 @@ function parseProfile(raw: RawAccount): User {
     id: raw.name,
     username: raw.name,
     displayName: profile.name || raw.name,
-    avatar: profile.profile_image ? toHttps(profile.profile_image) : `https://steemitimages.com/u/${raw.name}/avatar`,
+    avatar: getAvatarUrl(raw.name),
     bio: profile.about || '',
     followers: 0,
     following: 0,
@@ -104,9 +154,7 @@ export const steemApi: ApiService = {
   },
 
   async getComments(postId: string): Promise<Comment[]> {
-    const [author, permlink] = postId.split('/');
-    if (!author || !permlink) return [];
-    return fetchComments(author, permlink);
+    return fetchComments(postId);
   },
 
   async addComment(postId: string, body: string, parentId?: string): Promise<Comment> {
@@ -143,9 +191,15 @@ export const steemApi: ApiService = {
     return [];
   },
 
-  async getNotifications(): Promise<Notification[]> {
-    // TODO: Implement with bridge.get_account_notifications
-    return [];
+  async getNotifications(username?: string): Promise<Notification[]> {
+    if (!username) return [];
+    const res = await fetch(`/api/notifications?account=${encodeURIComponent(username)}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+    const raw: RawNotification[] = await res.json();
+    return raw.map(mapNotification);
   },
 
   async getWalletHistory(): Promise<WalletTransaction[]> {
@@ -158,8 +212,24 @@ export const steemApi: ApiService = {
   },
 
   async getCommunityMembers(): Promise<User[]> {
-    // TODO: Implement with community.get_subscribers
-    return [];
+    const res = await fetch("/api/community/members");
+    if (!res.ok) return [];
+    const data: { account: string; displayName: string; avatarUrl: string }[] = await res.json();
+    return data.map((m) => ({
+      id: m.account,
+      username: m.account,
+      displayName: m.displayName || m.account,
+      avatar: m.avatarUrl,
+      bio: "",
+      followers: 0,
+      following: 0,
+      postCount: 0,
+      joinedDate: "",
+      reputation: 0,
+      steemPower: 0,
+      steemBalance: 0,
+      sbdBalance: 0,
+    }));
   },
 
   async getTopContentCreators(): Promise<User[]> {

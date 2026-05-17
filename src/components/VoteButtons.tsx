@@ -99,10 +99,6 @@ export function VoteButtons({ postId, votes: initialVotes, userVote: initialUser
   };
 
   const handleUpvoteClick = () => {
-    if (!currentUser) {
-      toast({ title: 'Please log in to vote', variant: 'destructive' });
-      return;
-    }
     if (userVote === 1) {
       setShowRemoveConfirm(true);
     } else {
@@ -119,10 +115,6 @@ export function VoteButtons({ postId, votes: initialVotes, userVote: initialUser
   };
 
   const handleDownvoteClick = () => {
-    if (!currentUser) {
-      toast({ title: 'Please log in to vote', variant: 'destructive' });
-      return;
-    }
     if (userVote === -1) {
       setShowRemoveConfirm(true);
     } else {

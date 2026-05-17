@@ -1,5 +1,3 @@
-import { supabase } from "@/integrations/supabase/client";
-
 let cachedPrice: number | null = null;
 let lastFetch = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -11,8 +9,9 @@ export async function fetchSbdPrice(): Promise<number> {
   }
 
   try {
-    const { data, error } = await supabase.functions.invoke("sbd-price");
-    if (error) throw error;
+    const res = await fetch("/api/sbd-price");
+    if (!res.ok) throw new Error("Failed to fetch SBD price");
+    const data = await res.json();
     if (data?.price_usd && typeof data.price_usd === "number") {
       cachedPrice = data.price_usd;
       lastFetch = now;

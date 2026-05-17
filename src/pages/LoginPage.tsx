@@ -11,7 +11,7 @@ import {
 } from '@/services/steem.auth';
 import { storePostingKey } from '@/services/steem.broadcast';
 import { KeyRound, Shield, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
-import { HempLogo } from '@/components/HempLogo';
+import { AppLogo } from '@/components/AppLogo';
 import { toast } from 'sonner';
 
 export default function LoginPage() {
@@ -97,9 +97,9 @@ export default function LoginPage() {
       <div className="flex items-center justify-center min-h-[70vh]">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <HempLogo className="h-12 w-12 mx-auto mb-4 text-primary" />
+            <AppLogo className="h-12 w-12 mx-auto mb-4 text-primary" />
             <h1 className="font-heading text-3xl font-bold text-foreground">
-              Sign in to Hempire
+              Sign in to SteemDev
             </h1>
             <p className="text-muted-foreground mt-2">
               Use your Steem account to sign in
@@ -216,7 +216,7 @@ export default function LoginPage() {
             <div className="rounded-lg bg-muted/50 p-3 border border-border/50">
               <p className="text-xs text-muted-foreground">
                 <span className="font-medium text-foreground">Signature Message:</span>{' '}
-                "Login to World Of Xpilar [timestamp]"
+                "Login to SteemDev [timestamp]"
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 A timestamped message will be signed to verify your identity.

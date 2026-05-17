@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { useAppStore } from '@/store/useAppStore';
@@ -9,13 +9,24 @@ import {
   generatePermlink,
   getStoredPostingKey,
 } from '@/services/steem.broadcast';
-import { ArrowLeft, Send, Save, Tag, X, Settings, Eye, Columns2, Pencil, LogIn } from 'lucide-react';
+import { createDraft, updateDraft, fetchDrafts, deleteDraft, type Draft } from '@/services/drafts.service';
+import { ArrowLeft, Send, Save, Tag, X, Settings, Eye, Columns2, Pencil, LogIn, FolderOpen, Trash2, ChevronDown, ChevronUp, Clock } from 'lucide-react';
 import { MarkdownEditor } from '@/components/MarkdownEditor';
 import MarkdownPreview from '@uiw/react-markdown-preview';
 import { toast } from 'sonner';
 import { withFooter } from '@/lib/postFooter';
 
 type EditorMode = 'write' | 'split' | 'preview';
+
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
 
 export default function WritePage() {
   const navigate = useNavigate();
@@ -26,10 +37,31 @@ export default function WritePage() {
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [publishing, setPublishing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [draftId, setDraftId] = useState<string | null>(null);
   const [mode, setMode] = useState<EditorMode>('write');
   const [category, setCategory] = useState('');
 
+  const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [draftsOpen, setDraftsOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   const charCount = body.length;
+
+  useEffect(() => {
+    if (!currentUser) return;
+    fetchDrafts(currentUser.username)
+      .then(setDrafts)
+      .catch(() => {});
+  }, [currentUser]);
+
+  const refreshDrafts = async () => {
+    if (!currentUser) return;
+    try {
+      const rows = await fetchDrafts(currentUser.username);
+      setDrafts(rows);
+    } catch {}
+  };
 
   const addTag = () => {
     const tag = tagInput.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
@@ -52,7 +84,7 @@ export default function WritePage() {
 
     const jsonMetadata = JSON.stringify({
       tags: allTags,
-      app: 'worldofxpilar/1.0',
+      app: 'steemdev/1.0',
       format: 'markdown',
     });
 
@@ -84,6 +116,59 @@ export default function WritePage() {
     }
   };
 
+  const saveDraft = async () => {
+    if (!currentUser) return;
+    setSaving(true);
+    try {
+      const allTags = [...tags];
+      if (category && !allTags.includes(category)) allTags.unshift(category);
+
+      if (draftId) {
+        await updateDraft(draftId, { title, body, tags: allTags });
+        toast.success('Draft updated');
+      } else {
+        const draft = await createDraft({ username: currentUser.username, title, body, tags: allTags });
+        setDraftId(draft.id);
+        toast.success('Draft saved');
+      }
+      await refreshDrafts();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save draft');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const loadDraft = (draft: Draft) => {
+    setTitle(draft.title);
+    setBody(draft.body);
+    setTags(draft.tags ?? []);
+    setDraftId(draft.id);
+    setDraftsOpen(false);
+    setMode('write');
+    toast.success(`Loaded: "${draft.title || 'Untitled draft'}"`);
+  };
+
+  const handleDeleteDraft = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeletingId(id);
+    try {
+      await deleteDraft(id);
+      if (draftId === id) {
+        setDraftId(null);
+        setTitle('');
+        setBody('');
+        setTags([]);
+      }
+      await refreshDrafts();
+      toast.success('Draft deleted');
+    } catch {
+      toast.error('Failed to delete draft');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   // Login wall
   if (!currentUser) {
     return (
@@ -111,14 +196,19 @@ export default function WritePage() {
   const categories = ['worldnews', 'photography', 'art', 'technology', 'science', 'travel', 'food', 'music', 'gaming', 'sports'];
 
   return (
-    <Layout>
-      <div className="max-w-7xl mx-auto px-4 py-6 space-y-4">
+    <Layout wide>
+      <div className="py-2 space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="font-heading text-xl font-bold text-foreground">Post Editor</h1>
+          {draftId && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-accent/30 text-accent-foreground font-medium">
+              Editing draft
+            </span>
+          )}
 
           {/* Mode tabs - desktop */}
           <div className="hidden md:flex items-center gap-1 ml-auto bg-muted/50 rounded-lg p-1">
@@ -177,15 +267,15 @@ export default function WritePage() {
           {/* Editor area */}
           <div className="flex-1 min-w-0">
             {mode === 'write' && (
-              <MarkdownEditor value={body} onChange={setBody} height={500} />
+              <MarkdownEditor value={body} onChange={setBody} height={680} />
             )}
 
             {mode === 'split' && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="min-w-0">
-                  <MarkdownEditor value={body} onChange={setBody} height={500} preview="edit" />
+                  <MarkdownEditor value={body} onChange={setBody} height={680} preview="edit" />
                 </div>
-                <div className="rounded-xl border border-border bg-card p-6 overflow-auto" style={{ maxHeight: 560 }}>
+                <div className="rounded-xl border border-border bg-card p-6 overflow-auto" style={{ maxHeight: 740 }}>
                   <div data-color-mode="auto">
                     <MarkdownPreview
                       source={body || '*Start writing to see a preview…*'}
@@ -229,7 +319,64 @@ export default function WritePage() {
           </div>
 
           {/* Sidebar */}
-          <div className="w-full lg:w-72 xl:w-80 shrink-0 space-y-4">
+          <div className="w-full lg:w-64 xl:w-72 shrink-0 space-y-4">
+
+            {/* Drafts panel */}
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+              <button
+                onClick={() => setDraftsOpen(o => !o)}
+                className="w-full flex items-center gap-2 px-4 py-3 text-sm font-semibold text-foreground hover:bg-muted/30 transition-colors"
+              >
+                <FolderOpen className="h-4 w-4 text-primary" />
+                Your Drafts
+                {drafts.length > 0 && (
+                  <span className="ml-1 text-xs px-1.5 py-0.5 rounded-full bg-primary/20 text-primary font-medium">
+                    {drafts.length}
+                  </span>
+                )}
+                {draftsOpen ? <ChevronUp className="h-4 w-4 ml-auto text-muted-foreground" /> : <ChevronDown className="h-4 w-4 ml-auto text-muted-foreground" />}
+              </button>
+
+              {draftsOpen && (
+                <div className="border-t border-border divide-y divide-border/50 max-h-64 overflow-y-auto">
+                  {drafts.length === 0 ? (
+                    <p className="px-4 py-4 text-xs text-muted-foreground text-center">No drafts yet.</p>
+                  ) : (
+                    drafts.map((draft) => (
+                      <button
+                        key={draft.id}
+                        onClick={() => loadDraft(draft)}
+                        className={`w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors group ${draftId === draft.id ? 'bg-primary/5' : ''}`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {draft.title || <span className="italic text-muted-foreground">Untitled</span>}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">
+                              {draft.body ? draft.body.slice(0, 60) + (draft.body.length > 60 ? '…' : '') : 'Empty'}
+                            </p>
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                              <Clock className="h-3 w-3" />
+                              {timeAgo(draft.updated_at)}
+                            </p>
+                          </div>
+                          <button
+                            onClick={(e) => handleDeleteDraft(draft.id, e)}
+                            disabled={deletingId === draft.id}
+                            className="shrink-0 opacity-0 group-hover:opacity-100 p-1 rounded text-muted-foreground hover:text-red-500 transition-all"
+                            title="Delete draft"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Post Settings */}
             <div className="rounded-xl border border-border bg-card p-4 space-y-4">
               <h3 className="font-semibold text-sm text-foreground flex items-center gap-2">
@@ -303,11 +450,12 @@ export default function WritePage() {
                 {publishing ? 'Publishing...' : 'Publish Now'}
               </button>
               <button
-                disabled
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-border text-foreground font-medium opacity-50 cursor-not-allowed"
+                onClick={saveDraft}
+                disabled={saving || publishing}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-border text-foreground font-medium hover:bg-muted/50 disabled:opacity-50 transition-colors"
               >
                 <Save className="h-4 w-4" />
-                Save as Draft
+                {saving ? 'Saving...' : draftId ? 'Update Draft' : 'Save as Draft'}
               </button>
               <p className="text-xs text-muted-foreground text-center">
                 Your post will be visible to all users once published.

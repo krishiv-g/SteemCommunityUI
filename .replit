@@ -1,0 +1,54 @@
+modules = ["nodejs-20", "web", "postgresql-16"]
+[agent]
+expertMode = true
+integrations = ["javascript_database:1.0.0"]
+
+[nix]
+channel = "stable-25_05"
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["node", "./dist/index.cjs"]
+build = ["npm", "run", "build"]
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 3001
+externalPort = 3001
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[userenv]
+
+[userenv.shared]
+VITE_COMMUNITY_ID = "hive-xxxxx"
+VITE_COMMUNITY_TAGLINE = "Your tagline here"
+VITE_STEEM_RPC_NODES = "https://rpc-node1.example.com,https://rpc-node2.example.com"
+VITE_STEEM_RPC_TIMEOUT = "8000"
+VITE_SITE_URL = "https://your-site.example.com"
+JWT_SECRET = "your-jwt-secret-here"

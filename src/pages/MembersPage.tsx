@@ -4,6 +4,7 @@ import { Layout } from '@/components/Layout';
 import { RoleBadge } from '@/components/RoleBadge';
 import { fetchCommunitySubscribers, type CommunitySubscriber } from '@/services/steem.community';
 import { fetchAccounts, type SteemProfile } from '@/services/steem.accounts';
+import { getAvatarUrl } from '@/services/avatar';
 import { Users } from 'lucide-react';
 
 export default function MembersPage() {
@@ -21,54 +22,72 @@ export default function MembersPage() {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <h1 className="font-heading text-2xl font-bold text-foreground flex items-center gap-2">
-          <Users className="h-6 w-6 text-primary" /> Community Members
-          <span className="text-sm font-normal text-muted-foreground ml-2">({members.length})</span>
-        </h1>
+      <div className="space-y-5">
+        <div className="flex items-center justify-between">
+          <h1 className="font-heading text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
+            <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary shrink-0" />
+            Community Members
+          </h1>
+          {!loading && members.length > 0 && (
+            <span className="text-sm text-muted-foreground bg-muted px-2.5 py-1 rounded-full font-mono">
+              {members.length}
+            </span>
+          )}
+        </div>
+
         {!loading && members.length >= 250 && (
-          <p className="text-sm text-muted-foreground">Showing latest 250 active members only</p>
+          <p className="text-xs text-muted-foreground">Showing latest 250 active members</p>
         )}
+
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="animate-pulse rounded-xl bg-card shadow-soft p-5 space-y-3">
-                <div className="h-14 w-14 rounded-full bg-muted mx-auto" />
-                <div className="h-4 w-24 bg-muted rounded mx-auto" />
-                <div className="h-3 w-16 bg-muted rounded mx-auto" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="animate-pulse rounded-xl bg-card border border-border p-4 space-y-3">
+                <div className="h-12 w-12 rounded-full bg-muted mx-auto" />
+                <div className="h-3.5 w-20 bg-muted rounded mx-auto" />
+                <div className="h-3 w-14 bg-muted rounded mx-auto" />
               </div>
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {members.map(m => (
-              <div key={m.account} className="rounded-xl bg-card shadow-soft p-5 text-center space-y-3">
-                <Link to={`/user/${m.account}`}>
-                  <img
-                    src={m.profile?.profileImage || `https://steemitimages.com/u/${m.account}/avatar`}
-                    alt=""
-                    className="h-14 w-14 rounded-full mx-auto border-2 border-accent"
-                  />
-                </Link>
+              <Link
+                key={m.account}
+                to={`/user/${m.account}`}
+                className="group rounded-xl bg-card border border-border hover:border-primary/30 p-4 text-center space-y-2.5 transition-all hover:shadow-elevated"
+              >
+                <img
+                  src={getAvatarUrl(m.account)}
+                  alt=""
+                  className="h-12 w-12 sm:h-14 sm:w-14 rounded-full mx-auto object-cover group-hover:ring-2 group-hover:ring-primary/40 transition-all"
+                />
                 <div>
-                  <Link to={`/user/${m.account}`} className="font-heading font-bold text-card-foreground hover:text-primary transition-colors">
+                  <p className="font-heading font-bold text-sm text-foreground group-hover:text-primary transition-colors truncate">
                     {m.profile?.name || m.account}
-                  </Link>
-                  <p className="text-sm text-muted-foreground">@{m.account}</p>
-                  <p className="text-xs text-muted-foreground">Rep: {m.profile?.reputation ?? '–'}</p>
+                  </p>
+                  <p className="text-xs text-muted-foreground font-mono truncate">@{m.account}</p>
+                  {m.profile?.reputation != null && (
+                    <p className="text-[10px] text-muted-foreground/70 mt-0.5">Rep: {m.profile.reputation}</p>
+                  )}
                 </div>
-                <div className="flex justify-center">
-                  {m.title ? (
-                    <RoleBadge title={m.title} role={m.role} />
-                  ) : m.role !== 'guest' ? (
-                    <RoleBadge title={m.role} role={m.role} />
-                  ) : null}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Joined {new Date(m.subscribedAt + 'Z').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                {(m.title || m.role !== 'guest') && (
+                  <div className="flex justify-center">
+                    <RoleBadge title={m.title || m.role} role={m.role} />
+                  </div>
+                )}
+                <p className="text-[10px] text-muted-foreground">
+                  {new Date(m.subscribedAt + 'Z').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                 </p>
-              </div>
+              </Link>
             ))}
+          </div>
+        )}
+
+        {!loading && members.length === 0 && (
+          <div className="text-center py-16 text-muted-foreground">
+            <Users className="h-10 w-10 mx-auto mb-3 opacity-20" />
+            <p className="text-sm">No members found.</p>
           </div>
         )}
       </div>

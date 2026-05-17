@@ -2,6 +2,8 @@ import { steemRpc } from './steem.rpc';
 import { fetchSbdPrice } from './sbd-price';
 import { stripFooter } from '@/lib/postFooter';
 import type { Comment } from './api.interface';
+import { fetchAccounts } from './steem.accounts';
+import { getAvatarUrl } from './avatar';
 
 interface SteemReply {
   id: number;
@@ -38,7 +40,7 @@ function mapReply(raw: SteemReply, sbdToUsd: number, currentUsername?: string, n
       id: raw.author,
       username: raw.author,
       displayName: raw.author,
-      avatar: `https://steemitimages.com/u/${raw.author}/avatar`,
+      avatar: getAvatarUrl(raw.author),
       bio: '',
       joinedDate: '',
       reputation: Math.round(
@@ -119,7 +121,37 @@ export async function fetchComments(
   currentUsername?: string,
 ): Promise<Comment[]> {
   const sbdToUsd = await fetchSbdPrice();
-  return fetchRepliesRecursive(author, permlink, sbdToUsd, currentUsername);
+  const comments = await fetchRepliesRecursive(author, permlink, sbdToUsd, currentUsername);
+  return enrichCommentsWithProfiles(comments);
+}
+
+/** Enrich comments with real profile data from account data */
+async function enrichCommentsWithProfiles(comments: Comment[]): Promise<Comment[]> {
+  const uniqueAuthors = [...new Set(comments.map(c => c.author.username))];
+  if (uniqueAuthors.length === 0) return comments;
+
+  try {
+    const profiles = await fetchAccounts(uniqueAuthors);
+    const profileMap = new Map(profiles.map(p => [p.account, p]));
+
+    return comments.map(comment => {
+      const profile = profileMap.get(comment.author.username);
+      if (profile) {
+        return {
+          ...comment,
+          author: {
+            ...comment.author,
+            displayName: profile.name || comment.author.username,
+            avatar: profile.profileImage || comment.author.avatar,
+            reputation: profile.reputation,
+          },
+        };
+      }
+      return comment;
+    });
+  } catch {
+    return comments; // fallback to unenriched
+  }
 }
 
 /**
@@ -131,5 +163,6 @@ export async function fetchDeeperReplies(
   currentUsername?: string,
 ): Promise<Comment[]> {
   const sbdToUsd = await fetchSbdPrice();
-  return fetchRepliesRecursive(author, permlink, sbdToUsd, currentUsername, 6, 0);
+  const comments = await fetchRepliesRecursive(author, permlink, sbdToUsd, currentUsername, 6, 0);
+  return enrichCommentsWithProfiles(comments);
 }

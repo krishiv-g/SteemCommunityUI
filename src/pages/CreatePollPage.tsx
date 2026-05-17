@@ -87,7 +87,7 @@ export default function CreatePollPage() {
       });
 
       // 2. Broadcast to Steem automatically — Keychain shows its own popup, posting key is silent
-      const siteUrl = import.meta.env.VITE_SITE_URL || 'https://worldofxpilar.com';
+      const siteUrl = import.meta.env.VITE_SITE_URL || 'https://your-site.example.com';
       const body = buildPollSteemBody(poll, siteUrl);
       const jsonMetadata = buildPollJsonMetadata(poll.tags);
       const params = {

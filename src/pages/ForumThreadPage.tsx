@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { getAvatarUrl } from '@/services/avatar';
 import { Layout } from '@/components/Layout';
 import { fetchThreadByPermlink, type DbThread } from '@/services/forums.service';
 import { fetchPost } from '@/services/steem.posts';
@@ -87,7 +88,7 @@ export default function ForumThreadPage() {
           <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-muted-foreground">
             <Link to={`/user/${thread.author}`} className="flex items-center gap-2 hover:text-foreground transition-colors">
               <img
-                src={`https://steemitimages.com/u/${thread.author}/avatar`}
+                src={getAvatarUrl(thread.author)}
                 alt=""
                 className="h-7 w-7 sm:h-8 sm:w-8 rounded-full border-2 border-accent"
               />

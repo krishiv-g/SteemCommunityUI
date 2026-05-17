@@ -23,18 +23,18 @@ function wifToPrivateKey(wif: string): Uint8Array {
  */
 export function getStoredPostingKey(): string | null {
   try {
-    return sessionStorage.getItem('hempire_posting_key');
+    return sessionStorage.getItem('posting_key');
   } catch {
     return null;
   }
 }
 
 export function storePostingKey(wif: string): void {
-  sessionStorage.setItem('hempire_posting_key', wif);
+  sessionStorage.setItem('posting_key', wif);
 }
 
 export function clearPostingKey(): void {
-  sessionStorage.removeItem('hempire_posting_key');
+  sessionStorage.removeItem('posting_key');
 }
 
 // ─── Binary serialization helpers ────────────────────────────────
@@ -192,9 +192,8 @@ function hexToBytes(hex: string): Uint8Array {
  */
 async function signDigest(digest: Uint8Array, wif: string): Promise<string> {
   const privKey = wifToPrivateKey(wif);
-  // prehash: false — digest is already sha256(chainId + txBytes); don't double-hash
-  const sig = secp.sign(digest, privKey, { lowS: true, prehash: false }) as Uint8Array;
-  const sigRecovered = secp.sign(digest, privKey, { format: 'recovered', lowS: true, prehash: false }) as Uint8Array;
+  const sig = secp.sign(digest, privKey, { lowS: true }) as Uint8Array;
+  const sigRecovered = secp.sign(digest, privKey, { format: 'recovered', lowS: true }) as Uint8Array;
   const recoveryFlag = sigRecovered[0];
   const rHex = secp.etc.bytesToHex(sig.slice(0, 32));
   const sHex = secp.etc.bytesToHex(sig.slice(32, 64));

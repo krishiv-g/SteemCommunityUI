@@ -205,7 +205,7 @@ export default function SettingsPage() {
           </h2>
           <div className="rounded-lg bg-muted p-4">
             <p className="text-sm font-mono text-foreground">
-              "Login to World Of Xpilar [timestamp]"
+              "Login to SteemDev [timestamp]"
             </p>
             <p className="text-xs text-muted-foreground mt-2">
               This message is signed each time you log in to verify your identity.

@@ -1,4 +1,5 @@
 import { steemRpc } from './steem.rpc';
+import { getAvatarUrl } from './avatar';
 
 /** Profile data parsed from posting_json_metadata */
 export interface SteemProfile {
@@ -71,7 +72,7 @@ function parseProfile(raw: RawAccount): SteemProfile {
     account: raw.name,
     name: profile.name || raw.name,
     about: profile.about || '',
-    profileImage: toHttps(profile.profile_image || `https://steemitimages.com/u/${raw.name}/avatar`),
+    profileImage: getAvatarUrl(raw.name),
     coverImage: toHttps(profile.cover_image || ''),
     location: profile.location || '',
     website: profile.website || '',

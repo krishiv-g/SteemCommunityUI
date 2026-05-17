@@ -2,16 +2,32 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { fetchThreads, type DbThread } from '@/services/forums.service';
+import { fetchAccounts } from '@/services/steem.accounts';
+import { getAvatarUrl } from '@/services/avatar';
 import { MessageSquare, Pin, Plus, Clock, ArrowUpRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
+interface ThreadWithProfile extends DbThread {
+  profileImage?: string;
+}
+
 export default function ForumsPage() {
-  const [threads, setThreads] = useState<DbThread[]>([]);
+  const [threads, setThreads] = useState<ThreadWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchThreads().then((t) => {
-      setThreads(t);
+    fetchThreads().then(async (t) => {
+      // Fetch profile images for all authors
+      const uniqueAuthors = [...new Set(t.map(thread => thread.author))];
+      const profiles = await fetchAccounts(uniqueAuthors);
+      const profileMap = new Map(profiles.map(p => [p.account, p.profileImage]));
+      
+      const enrichedThreads: ThreadWithProfile[] = t.map(thread => ({
+        ...thread,
+        profileImage: profileMap.get(thread.author),
+      }));
+      
+      setThreads(enrichedThreads);
       setLoading(false);
     });
   }, []);
@@ -83,14 +99,14 @@ export default function ForumsPage() {
   );
 }
 
-function ThreadRow({ thread }: { thread: DbThread }) {
+function ThreadRow({ thread }: { thread: ThreadWithProfile }) {
   return (
     <Link
       to={`/forums/${thread.permlink}`}
       className="flex items-center gap-3 sm:gap-4 -mx-3 sm:mx-0 rounded-none sm:rounded-xl bg-card shadow-soft p-3 sm:p-5 hover:shadow-md transition-shadow group border-b sm:border-b-0 border-border/50"
     >
       <img
-        src={`https://steemitimages.com/u/${thread.author}/avatar`}
+        src={getAvatarUrl(thread.author)}
         alt=""
         className="h-9 w-9 sm:h-10 sm:w-10 rounded-full border-2 border-accent shrink-0"
       />

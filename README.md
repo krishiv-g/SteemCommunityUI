@@ -1,8 +1,8 @@
-# World of Xpilar — Community App
+# SteemDev — Community App
 
-A Steem blockchain community web application for **World of Xpilar** (`hive-185836`) — a community focused on art, photography, and creativity. Built as a single-page application with full blockchain read/write integration, server-side OG meta tags, and live token price data.
+A Steem blockchain community web application for **SteemDev** (`hive-xxxxx`) — a community focused on developers, programming, and technology. Built as a single-page application with full blockchain read/write integration, server-side OG meta tags, and live token price data.
 
-**Live:** https://worldofxpilar.com
+**Live:** https://your-site.example.com
 
 ---
 
@@ -60,7 +60,7 @@ The app connects directly to Steem RPC nodes — no intermediary API server.
 All RPC calls fire to all configured nodes simultaneously via `Promise.any` — whichever responds first wins. Configured in `.env`:
 
 ```
-VITE_STEEM_RPC_NODES=https://api.steemit.com,https://api.justyy.com
+VITE_STEEM_RPC_NODES=https://rpc-node1.example.com,https://rpc-node2.example.com
 VITE_STEEM_RPC_TIMEOUT=8000
 ```
 
@@ -116,29 +116,40 @@ Votes, posts, and comments are broadcast as signed Steem transactions. The signi
 
 ---
 
-## Supabase Edge Functions
+## Database — Netlify DB (Powered by Neon)
 
-Deployed on Supabase (Deno runtime). Source in `supabase/functions/`.
+The app uses **Netlify DB** (PostgreSQL powered by Neon) for storing polls, forum threads, and user sessions.
 
-### `steem-auth`
+### Setup (One Command)
 
-**Endpoint:** `POST /functions/v1/steem-auth`  
-**Body:** `{ "username": "alice" }`
+```bash
+npx netlify db init
+```
 
-Authenticates a Steem user by username (key verification is done client-side via Keychain or WIF). Creates or updates a record in the `steem_users` table, then returns a signed JWT valid for 7 days.
+This provisions a PostgreSQL database and automatically configures:
+- Connection string (`DATABASE_URL`)
+- Drizzle ORM
+- Drizzle Studio
 
-**Required Supabase secrets:**
-- `SUPABASE_JWT_SECRET` — must be set via `supabase secrets set SUPABASE_JWT_SECRET=<value>` (value from Supabase Dashboard → Settings → API → JWT Secret)
-- `SUPABASE_SERVICE_ROLE_KEY` — set automatically by Supabase
+### Migrations
 
-### `sbd-price`
+```bash
+# Push schema to database
+npm run db:push
 
-**Endpoint:** `GET /functions/v1/sbd-price`
+# Open Drizzle Studio to browse data
+npx drizzle-kit studio
+```
 
-Fetches live SBD/USD price from CoinMarketCap API. Returns price, 24h change, market cap, volume. Falls back to `1` (1:1) on the client side if the function is unavailable.
+### Tables
 
-**Required Supabase secret:**
-- `COINMARKETCAP_API_KEY` — CoinMarketCap Pro API key
+| Table | Description |
+|---|---|
+| `steem_users` | Logged-in users (username, login timestamps) |
+| `polls` | Poll metadata (title, description, tags, ends_at) |
+| `poll_options` | Poll options (label, position) |
+| `poll_votes` | Poll votes (voter, option_id) — unique per voter |
+| `forum_threads` | Forum thread index (title, tags, pinned) |
 
 ---
 
@@ -146,28 +157,42 @@ Fetches live SBD/USD price from CoinMarketCap API. Returns price, 24h change, ma
 
 Deployed automatically with Netlify. Source in `netlify/edge-functions/`.
 
-### `og` — Server-side OG meta tags
+### `steem-auth` — User Authentication
+
+**Endpoint:** `POST /api/steem-auth`  
+**Body:** `{ "username": "alice" }`
+
+Authenticates a Steem user by username. Creates or updates a record in the `steem_users` table, then returns a signed JWT valid for 7 days.
+
+**Environment Variables:**
+- `JWT_SECRET` — Secret key for signing JWTs (set in Netlify Dashboard)
+
+### `sbd-price` — Live SBD Price
+
+**Endpoint:** `GET /api/sbd-price`
+
+Fetches live SBD/USD price from CoinMarketCap API. Returns price, 24h change, market cap, volume.
+
+**Environment Variables:**
+- `COINMARKETCAP_API_KEY` — CoinMarketCap Pro API key (optional, falls back to $1 if not set)
+
+### `og` — Server-side OG Meta Tags
 
 Intercepts requests from social crawlers (Facebook, Twitter, LinkedIn, Telegram, WhatsApp, Slack, Discord, bots) and returns a pre-rendered HTML page with correct `og:*` and `twitter:*` meta tags. Real users always receive the SPA.
 
 **Routes handled:**
+- `/` — Community summary
+- `/community` — Community summary  
+- `/post/:author/:permlink` — Post with image
+- `/user/:username` — User profile
 
-| Path | OG type | Data source |
-|---|---|---|
-| `/` | Community summary | `bridge.get_community` |
-| `/community` | Community summary | `bridge.get_community` |
-| `/post/:author/:permlink` | Post (summary_large_image) | `condenser_api.get_content` |
-| `/user/:username` | Profile (summary) | `condenser_api.get_accounts` |
+**Debug:** Append `?_og=1` to any URL to see the OG HTML output in browser.
 
-Uses `Promise.any` across both RPC nodes for fastest response. Falls back to logo image if profile image is unavailable.
+### Deploy Edge Functions
 
-**Debug:** append `?_og=1` to any URL to see the OG HTML output in browser without a bot UA.
+Netlify automatically deploys edge functions on push to `main` branch. No additional setup needed!
 
-**Required Netlify env vars** (set in Netlify Dashboard → Environment Variables):
-- `SITE_URL` = `https://worldofxpilar.com`
-- `COMMUNITY_ID` = `hive-185836`
-
-> Note: `VITE_` prefix variables are build-time only and not available in edge functions.
+**Test locally:** `netlify dev`
 
 ---
 
@@ -176,37 +201,38 @@ Uses `Promise.any` across both RPC nodes for fastest response. Falls back to log
 ### `.env` (local development)
 
 ```env
-# Supabase
-VITE_SUPABASE_URL=https://<project>.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=<anon-key>
-VITE_SUPABASE_PROJECT_ID=<project-id>
-
 # Community
-VITE_COMMUNITY_ID=hive-185836
-VITE_COMMUNITY_TAGLINE=Real success is in your hands...
+VITE_COMMUNITY_ID=hive-xxxxx
+VITE_COMMUNITY_TAGLINE=Community for Developers
 
 # Steem RPC
-VITE_STEEM_RPC_NODES=https://api.steemit.com,https://api.justyy.com
+VITE_STEEM_RPC_NODES=https://rpc-node1.example.com,https://rpc-node2.example.com
 VITE_STEEM_RPC_TIMEOUT=8000
 
-# Netlify edge functions (also set in Netlify Dashboard)
-SITE_URL=https://worldofxpilar.com
-COMMUNITY_ID=hive-185836
+# Site URL
+VITE_SITE_URL=https://your-site.example.com
+SITE_URL=https://your-site.example.com
+
+# Logo
+VITE_COMMUNITY_LOGO=https://api.dicebear.com/9.x/bottts-neutral/svg?seed=xxxxx
+
+# Database (Netlify DB — auto-set after running `netlify db init`)
+DATABASE_URL=postgresql://user:password@host.neon.tech/dbname?sslmode=require
+
+# API Keys (optional)
+JWT_SECRET=your-jwt-secret-change-in-production
+COINMARKETCAP_API_KEY=your-cmc-api-key-optional
 ```
 
 ### Netlify Dashboard — Environment Variables
 
 | Variable | Value |
 |---|---|
-| `SITE_URL` | `https://worldofxpilar.com` |
-| `COMMUNITY_ID` | `hive-185836` |
-
-### Supabase Secrets
-
-| Secret | Description |
-|---|---|
-| `COINMARKETCAP_API_KEY` | CoinMarketCap Pro API key for SBD price |
-| `SUPABASE_JWT_SECRET` | From Supabase Dashboard → Settings → API → JWT Secret |
+| `DATABASE_URL` | Auto-set by `netlify db init` |
+| `SITE_URL` | `https://your-site.example.com` |
+| `COMMUNITY_ID` | `hive-xxxxx` |
+| `JWT_SECRET` | Your JWT secret for auth |
+| `COINMARKETCAP_API_KEY` | CoinMarketCap Pro API key (optional) |
 
 ---
 
@@ -261,7 +287,7 @@ npm test
 │   │   ├── VoteButtons.tsx     # Upvote/downvote with weight slider
 │   │   ├── CommentThread.tsx   # Threaded comments with reply/vote
 │   │   ├── Navbar.tsx          # Top navigation
-│   │   └── HempLogo.tsx        # App logo (whale SVG)
+│   │   └── AppLogo.tsx         # App logo (code SVG)
 │   ├── pages/              # Route-level page components
 │   ├── services/           # Steem API layer
 │   │   ├── steem.rpc.ts        # Core RPC caller (Promise.any race)
@@ -277,17 +303,17 @@ npm test
 │   ├── config/
 │   │   └── community.ts        # Community config from env vars
 │   └── index.css           # Tailwind theme (all HSL color vars)
-├── supabase/
-│   └── functions/
-│       ├── steem-auth/         # JWT auth edge function
-│       └── sbd-price/          # Live SBD price edge function
+├── server/
+│   ├── index.ts            # Express API server
+│   ├── db.ts               # Database connection (Drizzle ORM)
+│   └── schema.ts           # Database schema (Drizzle)
 ├── netlify/
 │   └── edge-functions/
 │       └── og.ts               # Server-side OG meta tag renderer
 ├── public/
-│   ├── whale-svgrepo-com.svg   # App logo
-│   └── favicon_io/             # Favicon set (ico, png, manifest)
+│   └── favicon.svg             # Favicon (code SVG)
 ├── index.html              # App entry point with static OG tags + analytics
+├── drizzle.config.ts       # Drizzle Kit configuration
 └── netlify.toml            # Build config, edge function routing, SPA redirect
 ```
 
@@ -316,7 +342,7 @@ To retheme: change the HSL hue/saturation/lightness values in `src/index.css` �
 
 ## Community
 
-- **Community ID:** `hive-185836`
-- **Community name:** World of Xpilar
-- **Tagline:** Real success is in your hands – fueled by creativity, engagement, and teamwork.
-- **Focus:** Art, photography, nature, creativity on the Steem blockchain
+- **Community ID:** `hive-xxxxx`
+- **Community name:** SteemDev
+- **Tagline:** A Community for Developers
+- **Focus:** Programming, technology, and blockchain development on Steem

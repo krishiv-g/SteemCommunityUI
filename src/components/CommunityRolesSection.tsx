@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchCommunityRoles, type CommunityTeamMember } from '@/services/steem.community';
 import { fetchAccounts, type SteemProfile } from '@/services/steem.accounts';
+import { getAvatarUrl } from '@/services/avatar';
 import { Shield } from 'lucide-react';
 
 const ROLE_ORDER = ['admin', 'mod'] as const;
@@ -94,12 +95,9 @@ export function CommunityRolesSection() {
                           className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors"
                         >
                           <img
-                            src={profile?.profileImage || `https://steemitimages.com/u/${m.account}/avatar`}
+                            src={getAvatarUrl(m.account)}
                             alt={m.account}
                             className="h-9 w-9 rounded-full border-2 border-accent object-cover flex-shrink-0"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = `https://steemitimages.com/u/${m.account}/avatar`;
-                            }}
                           />
                           <div className="min-w-0 flex-1">
                             <p className="font-medium text-sm text-foreground truncate">

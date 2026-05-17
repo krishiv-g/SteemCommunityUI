@@ -3,45 +3,45 @@ import { useParams, Link } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { fetchPollByPermlink, castPollVote, type DbPoll } from '@/services/polls.service';
 import { fetchPost } from '@/services/steem.posts';
-import { fetchComments } from '@/services/steem.comments';
-import { CommentThread } from '@/components/CommentThread';
+import { fetchAccounts } from '@/services/steem.accounts';
+import { getAvatarUrl } from '@/services/avatar';
 import { broadcastCustomJsonWithKey, broadcastCustomJsonWithKeychain, getStoredPostingKey } from '@/services/steem.broadcast';
 import { useAppStore } from '@/store/useAppStore';
 import { Clock, Users, CheckCircle2, ArrowLeft, LogIn } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { toast } from 'sonner';
-import type { Comment } from '@/services/api.interface';
+
+interface PollWithProfile extends DbPoll {
+  authorAvatar?: string;
+}
 
 export default function PollDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { currentUser } = useAppStore();
-  const [poll, setPoll] = useState<DbPoll | null>(null);
+  const [poll, setPoll] = useState<PollWithProfile | null>(null);
   const [payout, setPayout] = useState<number | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState(false);
 
   useEffect(() => {
     if (!id) return;
-
     fetchPollByPermlink(id, currentUser?.username).then(async (p) => {
-      if (!p) {
-        setLoading(false);
-        return;
+      if (p) {
+        // Fetch author profile image
+        try {
+          const [profile] = await fetchAccounts([p.author]);
+          setPoll({ ...p, authorAvatar: profile?.profileImage });
+        } catch {
+          setPoll(p);
+        }
+      } else {
+        setPoll(null);
       }
-      setPoll(p);
-
-      // Fetch payout + comments from Steem in parallel
-      const [steemPost, steemComments] = await Promise.all([
-        fetchPost(p.author, p.permlink).catch(() => null),
-        fetchComments(p.author, p.permlink, currentUser?.username).catch(() => []),
-      ]);
-
-      console.log(`[PollDetail] Poll: ${p.author}/${p.permlink}`);
-      console.log(`[PollDetail] Fetched ${steemComments.length} comments`);
-      setPayout(steemPost?.payout ?? null);
-      setComments(steemComments);
       setLoading(false);
+      // Fetch payout from Steem post in background
+      if (p?.author && p?.permlink) {
+        fetchPost(p.author, p.permlink).then(post => setPayout(post.payout)).catch(() => {});
+      }
     });
   }, [id, currentUser?.username]);
 
@@ -177,7 +177,11 @@ export default function PollDetailPage() {
 
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-1">
               <span className="flex items-center gap-1">
-                <img src={`https://steemitimages.com/u/${poll.author}/avatar`} alt="" className="h-5 w-5 rounded-full" />
+                <img
+                  src={getAvatarUrl(poll.author)}
+                  alt=""
+                  className="h-5 w-5 rounded-full"
+                />
                 <Link to={`/user/${poll.author}`} className="hover:text-foreground transition-colors">
                   @{poll.author}
                 </Link>
@@ -255,13 +259,6 @@ export default function PollDetailPage() {
             </p>
           )}
         </div>
-
-        {/* Comments Section */}
-        {poll && (
-          <div id="comments" className="rounded-xl bg-card shadow-soft p-4 sm:p-6">
-            <CommentThread postId={`${poll.author}/${poll.permlink}`} comments={comments} />
-          </div>
-        )}
       </div>
     </Layout>
   );

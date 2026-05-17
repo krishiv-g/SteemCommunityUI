@@ -3,22 +3,29 @@ import { Link } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { api } from '@/services';
 import type { Notification } from '@/services/api.interface';
-import { Bell, ChevronUp, MessageCircle, AtSign, UserPlus } from 'lucide-react';
+import { useAppStore } from '@/store/useAppStore';
+import { Bell, ChevronUp, MessageCircle, AtSign, UserPlus, Repeat2 } from 'lucide-react';
 
 const iconMap = {
   vote: ChevronUp,
-  comment: MessageCircle,
   mention: AtSign,
+  reply: MessageCircle,
   follow: UserPlus,
+  resteem: Repeat2,
 };
 
 export default function NotificationsPage() {
+  const { currentUser } = useAppStore();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api.getNotifications().then(n => { setNotifications(n); setLoading(false); });
-  }, []);
+    setError(null);
+    api.getNotifications(currentUser?.username)
+      .then(n => { setNotifications(n); setLoading(false); })
+      .catch((err: Error) => { setError(err.message); setLoading(false); });
+  }, [currentUser?.username]);
 
   return (
     <Layout>
@@ -28,8 +35,16 @@ export default function NotificationsPage() {
         </h1>
 
         <div className="space-y-1">
+          {!loading && error && (
+            <p className="text-sm text-destructive text-center py-12">Failed to load notifications: {error}</p>
+          )}
+          {!loading && !error && notifications.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-12">
+              {currentUser ? 'No notifications yet.' : 'Log in to see your notifications.'}
+            </p>
+          )}
           {notifications.map(n => {
-            const Icon = iconMap[n.type];
+            const Icon = iconMap[n.type as keyof typeof iconMap] ?? Bell;
             return (
               <div key={n.id} className={`flex items-start gap-3 p-4 rounded-lg transition-colors ${n.read ? '' : 'bg-accent/10'}`}>
                 <div className="p-2 rounded-full bg-accent/20">
@@ -42,9 +57,9 @@ export default function NotificationsPage() {
                     </Link>{' '}
                     {n.message}
                   </p>
-                  {n.postTitle && (
-                    <Link to={`/post/${n.postId}`} className="text-sm text-muted-foreground hover:text-primary transition-colors line-clamp-1">
-                      "{n.postTitle}"
+                  {n.postId && (
+                    <Link to={`/post/${n.postId}`} className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                      view post →
                     </Link>
                   )}
                   <p className="text-xs text-muted-foreground mt-1">

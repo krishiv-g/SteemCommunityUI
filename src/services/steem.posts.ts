@@ -3,6 +3,7 @@ import { steemRpc } from './steem.rpc';
 import { fetchAccounts } from './steem.accounts';
 import { fetchSbdPrice } from './sbd-price';
 import { stripFooter } from '@/lib/postFooter';
+import { getAvatarUrl } from './avatar';
 import type { Post } from './api.interface';
 
 /** Raw post from bridge.get_ranked_posts */
@@ -111,7 +112,7 @@ function mapPost(raw: SteemRankedPost, sbdToUsd: number, currentUsername?: strin
       id: raw.author,
       username: raw.author,
       displayName: raw.author,
-      avatar: `https://steemitimages.com/u/${raw.author}/avatar`,
+      avatar: getAvatarUrl(raw.author),
       bio: '',
       joinedDate: '',
       reputation: Math.round(Number(raw.author_reputation) > 1e15 ? Math.log10(Number(raw.author_reputation)) * 9 - 56 : Number(raw.author_reputation)),
@@ -155,6 +156,7 @@ async function enrichPostsWithProfiles(posts: Post[]): Promise<Post[]> {
           author: {
             ...post.author,
             displayName: profile.name || post.author.username,
+            avatar: profile.profileImage || post.author.avatar,
             reputation: profile.reputation,
           },
         };
@@ -184,6 +186,25 @@ export async function fetchRankedPosts(
     fetchSbdPrice(),
   ]);
   const posts = raw.filter(r => !r.stats?.is_pinned).slice(0, limit).map(r => mapPost(r, sbdToUsd, observer ?? undefined));
+  return enrichPostsWithProfiles(posts);
+}
+
+/** Fetch posts filtered by a specific tag */
+export async function fetchPostsByTag(
+  tag: string,
+  sort: RankedSort = 'trending',
+  limit = 20,
+): Promise<Post[]> {
+  const [raw, sbdToUsd] = await Promise.all([
+    steemRpc<SteemRankedPost[]>('bridge.get_ranked_posts', {
+      sort,
+      tag,
+      observer: null,
+      limit,
+    }),
+    fetchSbdPrice(),
+  ]);
+  const posts = raw.map(r => mapPost(r, sbdToUsd));
   return enrichPostsWithProfiles(posts);
 }
 

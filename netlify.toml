@@ -2,6 +2,10 @@
   publish = "dist"
   command = "npm run build"
 
+[build.environment]
+  SECRETS_SCAN_OMIT_PATHS = "sample-env,.replit,QWEN.md,README.md,replit.md,dist/**,.netlify/**"
+
+# ─── Edge Functions (Deno) ───────────────────────────────────────────────────
 [[edge_functions]]
   path = "/"
   function = "og"
@@ -18,6 +22,77 @@
   path = "/community"
   function = "og"
 
+[[edge_functions]]
+  path = "/api/sbd-price"
+  function = "sbd-price"
+
+[[edge_functions]]
+  path = "/api/notifications"
+  function = "notifications"
+
+[[edge_functions]]
+  path = "/api/notifications/count"
+  function = "notifications"
+
+[[edge_functions]]
+  path = "/api/tags"
+  function = "tags"
+
+[[edge_functions]]
+  path = "/api/community/members"
+  function = "community-members"
+
+[[edge_functions]]
+  path = "/api/search/members"
+  function = "community-members"
+
+# ─── Netlify Functions (Node.js) — DB routes ─────────────────────────────────
+[[redirects]]
+  from = "/api/steem-auth"
+  to = "/.netlify/functions/steem-auth"
+  status = 200
+
+[[redirects]]
+  from = "/api/polls"
+  to = "/.netlify/functions/polls"
+  status = 200
+
+[[redirects]]
+  from = "/api/polls/*"
+  to = "/.netlify/functions/polls"
+  status = 200
+
+[[redirects]]
+  from = "/api/forums"
+  to = "/.netlify/functions/forums"
+  status = 200
+
+[[redirects]]
+  from = "/api/forums/*"
+  to = "/.netlify/functions/forums"
+  status = 200
+
+[[redirects]]
+  from = "/api/bookmarks"
+  to = "/.netlify/functions/bookmarks"
+  status = 200
+
+[[redirects]]
+  from = "/api/bookmarks/*"
+  to = "/.netlify/functions/bookmarks"
+  status = 200
+
+[[redirects]]
+  from = "/api/drafts"
+  to = "/.netlify/functions/drafts"
+  status = 200
+
+[[redirects]]
+  from = "/api/drafts/*"
+  to = "/.netlify/functions/drafts"
+  status = 200
+
+# ─── SPA fallback (must be last) ─────────────────────────────────────────────
 [[redirects]]
   from = "/*"
   to = "/index.html"

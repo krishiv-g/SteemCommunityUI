@@ -1,4 +1,4 @@
-const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://worldofxpilar.com';
+const SITE_URL = 'https://your-site.example.com';
 const SITE_TAG = '#WoX';
 const SITE_HASHTAG_LINK = `[${SITE_TAG}](${SITE_URL})`;
 

@@ -2,11 +2,12 @@ import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { AuthorCard } from '@/components/AuthorCard';
-import { HempLogo } from '@/components/HempLogo';
+import { AppLogo } from '@/components/AppLogo';
 import { CommunityRolesSection } from '@/components/CommunityRolesSection';
 import { api } from '@/services';
 import { fetchCommunity, fetchCommunityTeam, type CommunityTeamMember } from '@/services/steem.community';
 import { fetchAccounts, type SteemProfile } from '@/services/steem.accounts';
+import { getAvatarUrl } from '@/services/avatar';
 import { fetchPinnedPosts } from '@/services/steem.posts';
 import type { Post, Community as CommunityType, User } from '@/services/api.interface';
 import { Users, DollarSign, TrendingUp, PenTool, Shield, ChevronDown, ChevronUp } from 'lucide-react';
@@ -90,12 +91,12 @@ export default function CommunityPage() {
         <div className="rounded-xl bg-card shadow-soft p-8 space-y-6">
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center gap-3">
-              <HempLogo className="h-12 w-12" />
+              <AppLogo className="h-12 w-12" />
               <h1 className="font-heading text-4xl font-bold text-foreground">{community.title}</h1>
             </div>
             <p className="text-muted-foreground max-w-lg mx-auto">{community.description}</p>
             <div className="flex justify-center gap-8 text-sm">
-              <Link to="/members" className="flex items-center gap-1.5 hover:text-primary transition-colors"><Users className="h-4 w-4 text-secondary" /> <strong>{community.members}</strong> members</Link>
+              <Link to="/community/members" className="flex items-center gap-1.5 hover:text-primary transition-colors"><Users className="h-4 w-4 text-secondary" /> <strong>{community.members}</strong> members</Link>
               <span className="flex items-center gap-1.5"><DollarSign className="h-4 w-4 text-secondary" /> <strong>{community.pendingRewards}</strong> pending</span>
               <span className="flex items-center gap-1.5"><TrendingUp className="h-4 w-4 text-secondary" /> <strong>{community.activePosters}</strong> active</span>
             </div>
@@ -127,25 +128,25 @@ export default function CommunityPage() {
                             <Link
                               key={profile.account}
                               to={`/user/${profile.account}`}
-                              className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
+                              className="flex flex-col items-center text-center p-4 rounded-lg hover:bg-muted transition-colors gap-3"
                             >
                               <img
-                                src={profile.profileImage}
+                                src={getAvatarUrl(profile.account)}
                                 alt={profile.name}
-                                className="h-12 w-12 rounded-full border-2 border-accent object-cover"
-                                onError={(e) => { (e.target as HTMLImageElement).src = `https://steemitimages.com/u/${profile.account}/avatar`; }}
+                                className="h-16 w-16 rounded-full object-cover flex-shrink-0"
                               />
-                              <div className="min-w-0 flex-1">
-                                <p className="font-bold text-sm text-foreground truncate">{profile.name}</p>
+                              <div className="w-full space-y-1">
+                                <p className="font-bold text-sm text-foreground break-words">{profile.name}</p>
                                 <p className="text-xs text-foreground/70">@{profile.account}</p>
+                                <div className="flex items-center justify-center gap-2 flex-wrap">
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium capitalize">
+                                    {teamMember?.role || 'member'}
+                                  </span>
+                                </div>
                                 {profile.about && (
-                                  <p className="text-xs text-foreground/60 mt-0.5">{profile.about}</p>
+                                  <p className="text-xs text-foreground/60 mt-2 whitespace-pre-line">{profile.about}</p>
                                 )}
-                                <p className="text-xs text-foreground/60 mt-0.5">Steemian Since <span className="font-semibold text-foreground">{profile.accountAge}</span></p>
                               </div>
-                              <span className="flex-shrink-0 rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium capitalize">
-                                {teamMember?.role || 'member'}
-                              </span>
                             </Link>
                           );
                         })}
@@ -207,10 +208,9 @@ export default function CommunityPage() {
                 <div key={profile.account} className="rounded-xl bg-card shadow-soft p-5 text-center space-y-3">
                   <Link to={`/user/${profile.account}`}>
                     <img
-                      src={profile.profileImage}
+                      src={getAvatarUrl(profile.account)}
                       alt=""
                       className="h-16 w-16 rounded-full mx-auto border-2 border-accent object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).src = `https://steemitimages.com/u/${profile.account}/avatar`; }}
                     />
                   </Link>
                   <div>
@@ -219,7 +219,7 @@ export default function CommunityPage() {
                     </Link>
                     <p className="text-sm text-muted-foreground">@{profile.account}</p>
                   </div>
-                  {profile.about && <p className="text-sm text-muted-foreground line-clamp-2">{profile.about}</p>}
+                  {profile.about && <p className="text-sm text-muted-foreground whitespace-pre-line line-clamp-4">{profile.about}</p>}
                   <p className="text-xs text-muted-foreground">{authorTitles.get(profile.account) || `@${profile.account}`}</p>
                 </div>
               ))}

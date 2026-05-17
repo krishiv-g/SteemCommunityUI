@@ -1,105 +1,116 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+html {
+  font-size: 110%;
+}
+
 @layer base {
   :root {
-    --background: 80 8% 92%;
-    --foreground: 160 60% 8%;
+    --background: 220 16% 97%;
+    --foreground: 222 47% 11%;
 
-    --card: 80 10% 94%;
-    --card-foreground: 160 60% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-    --popover: 80 10% 94%;
-    --popover-foreground: 160 60% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 160 70% 15%;
-    --primary-foreground: 80 20% 97%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 122 52% 33%;
+    --secondary: 262 83% 62%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 80 6% 87%;
-    --muted-foreground: 160 15% 40%;
+    --muted: 220 14% 92%;
+    --muted-foreground: 220 9% 46%;
 
-    --accent: 122 38% 74%;
-    --accent-foreground: 160 70% 10%;
+    --accent: 199 89% 48%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 80 8% 83%;
-    --input: 80 8% 83%;
-    --ring: 160 70% 15%;
+    --border: 220 13% 88%;
+    --input: 220 13% 91%;
+    --ring: 217 91% 60%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    --sidebar-background: 80 10% 94%;
-    --sidebar-foreground: 160 60% 8%;
-    --sidebar-primary: 160 70% 15%;
-    --sidebar-primary-foreground: 80 20% 97%;
-    --sidebar-accent: 122 38% 74%;
-    --sidebar-accent-foreground: 160 70% 10%;
-    --sidebar-border: 80 8% 83%;
-    --sidebar-ring: 160 70% 15%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 95%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 220 13% 88%;
+    --sidebar-ring: 217 91% 60%;
 
-    /* Custom tokens */
-    --surface: 80 8% 95%;
-    --surface-elevated: 0 0% 97%;
-    --gradient-primary: linear-gradient(135deg, hsl(160 70% 15%), hsl(122 52% 33%));
-    --gradient-accent: linear-gradient(135deg, hsl(122 38% 74% / 0.3), hsl(80 20% 97%));
-    --shadow-soft: 0 2px 16px -4px hsl(160 70% 15% / 0.08);
-    --shadow-elevated: 0 8px 32px -8px hsl(160 70% 15% / 0.12);
+    --surface: 220 16% 98%;
+    --surface-elevated: 0 0% 100%;
+    --shadow-soft: 0 1px 4px -1px hsl(222 47% 11% / 0.07), 0 0 0 1px hsl(222 47% 11% / 0.04);
+    --shadow-elevated: 0 4px 16px -4px hsl(222 47% 11% / 0.12);
     --font-heading: 'Space Grotesk', system-ui, sans-serif;
-    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-body: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   }
 
   .dark {
-    --background: 150 25% 8%;
-    --foreground: 80 10% 85%;
+    --background: 222 47% 8%;
+    --foreground: 213 27% 88%;
 
-    --card: 150 20% 11%;
-    --card-foreground: 80 10% 85%;
+    --card: 222 40% 11%;
+    --card-foreground: 213 27% 88%;
 
-    --popover: 150 20% 11%;
-    --popover-foreground: 80 10% 85%;
+    --popover: 222 40% 11%;
+    --popover-foreground: 213 27% 88%;
 
-    --primary: 122 38% 60%;
-    --primary-foreground: 150 25% 8%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 8%;
 
-    --secondary: 122 30% 25%;
-    --secondary-foreground: 80 10% 85%;
+    --secondary: 262 83% 68%;
+    --secondary-foreground: 222 47% 8%;
 
-    --muted: 150 15% 15%;
-    --muted-foreground: 80 10% 55%;
+    --muted: 222 35% 17%;
+    --muted-foreground: 215 16% 50%;
 
-    --accent: 122 30% 25%;
-    --accent-foreground: 80 10% 85%;
+    --accent: 199 89% 50%;
+    --accent-foreground: 222 47% 8%;
 
-    --destructive: 0 62% 30%;
+    --destructive: 0 62% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 150 15% 18%;
-    --input: 150 15% 18%;
-    --ring: 122 38% 60%;
+    --border: 222 30% 18%;
+    --input: 222 35% 16%;
+    --ring: 217 91% 60%;
 
-    --sidebar-background: 150 20% 11%;
-    --sidebar-foreground: 80 10% 85%;
-    --sidebar-primary: 122 38% 60%;
-    --sidebar-primary-foreground: 150 25% 8%;
-    --sidebar-accent: 122 30% 25%;
-    --sidebar-accent-foreground: 80 10% 85%;
-    --sidebar-border: 150 15% 18%;
-    --sidebar-ring: 122 38% 60%;
+    --sidebar-background: 222 40% 10%;
+    --sidebar-foreground: 213 27% 88%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 222 47% 8%;
+    --sidebar-accent: 222 35% 17%;
+    --sidebar-accent-foreground: 213 27% 88%;
+    --sidebar-border: 222 30% 16%;
+    --sidebar-ring: 217 91% 60%;
 
-    --surface: 150 20% 10%;
-    --surface-elevated: 150 20% 13%;
+    --surface: 222 47% 9%;
+    --surface-elevated: 222 40% 13%;
+    --shadow-soft: 0 1px 4px -1px hsl(0 0% 0% / 0.3);
+    --shadow-elevated: 0 4px 16px -4px hsl(0 0% 0% / 0.4);
   }
 
   * {
     @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    font-size: 16px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
   body {
@@ -109,26 +120,36 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Ensure colorful emoji rendering */
-  .emoji, [data-emoji] {
-    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif;
-    font-style: normal;
-    line-height: 1;
-  }
-
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
+  }
+
+  code, kbd, samp {
+    font-family: var(--font-mono);
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
   }
 }
 
 @layer utilities {
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: var(--gradient-primary);
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
   }
 
   .glass-panel {
-    @apply bg-card/80 backdrop-blur-md border border-border/50;
+    @apply bg-card/90 backdrop-blur-md border border-border;
   }
 
   .shadow-soft {
@@ -140,7 +161,25 @@
   }
 
   .reading-width {
-    @apply max-w-[720px] mx-auto;
+    @apply max-w-[740px] mx-auto;
+  }
+
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium
+           text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-all duration-150 w-full;
+  }
+
+  .sidebar-link-active {
+    @apply text-primary bg-primary/10 hover:bg-primary/15;
+  }
+
+  .tag-badge {
+    @apply inline-flex items-center gap-1 text-xs font-mono font-medium px-2 py-0.5 rounded
+           bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors;
   }
 }
 
@@ -149,56 +188,42 @@
   --color-canvas-default: hsl(var(--card)) !important;
   --color-fg-default: hsl(var(--foreground)) !important;
   --color-border-default: hsl(var(--border)) !important;
-  --color-canvas-subtle: hsl(var(--muted)) !important;
   background-color: hsl(var(--card)) !important;
   color: hsl(var(--foreground)) !important;
-  border: 1px solid hsl(var(--border)) !important;
-  border-radius: 0.75rem !important;
-  overflow: hidden;
-  font-family: var(--font-body), sans-serif !important;
+  border-color: hsl(var(--border)) !important;
+  border-radius: 0.5rem !important;
 }
 
 .md-editor-themed .w-md-editor-toolbar {
   background-color: hsl(var(--muted)) !important;
-  border-bottom: 1px solid hsl(var(--border)) !important;
+  border-color: hsl(var(--border)) !important;
 }
 
-.md-editor-themed .w-md-editor-toolbar li > button {
-  color: hsl(var(--muted-foreground)) !important;
-}
-
-.md-editor-themed .w-md-editor-toolbar li > button:hover {
+.md-editor-themed .w-md-editor-toolbar li button {
   color: hsl(var(--foreground)) !important;
 }
 
-.md-editor-themed .w-md-editor-text-input,
-.md-editor-themed .w-md-editor-text-pre,
+.md-editor-themed .w-md-editor-toolbar li button:hover {
+  background-color: hsl(var(--muted)) !important;
+}
+
 .md-editor-themed .w-md-editor-text-pre > code,
 .md-editor-themed .w-md-editor-text textarea {
   color: hsl(var(--foreground)) !important;
-  font-size: 0.95rem !important;
 }
 
-.md-editor-themed .wmde-markdown {
-  background-color: hsl(var(--card)) !important;
-  color: hsl(var(--foreground)) !important;
-  font-family: var(--font-body), sans-serif !important;
-}
-
-.md-editor-themed .w-md-editor-preview {
-  border-left: 1px solid hsl(var(--border)) !important;
-}
-
-/* Standalone preview theming */
 .md-preview-themed.wmde-markdown {
   background-color: transparent !important;
   color: hsl(var(--foreground)) !important;
-  font-family: var(--font-body), sans-serif !important;
+  font-family: var(--font-body) !important;
 }
 
 .md-preview-themed.wmde-markdown code {
   background-color: hsl(var(--muted)) !important;
-  color: hsl(var(--foreground)) !important;
+  color: hsl(var(--primary)) !important;
+  font-family: var(--font-mono) !important;
+  padding: 0.1em 0.4em !important;
+  border-radius: 0.25rem !important;
 }
 
 .md-preview-themed.wmde-markdown pre {

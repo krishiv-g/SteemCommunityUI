@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { fetchAccounts } from '@/services/steem.accounts';
+import { getAvatarUrl } from '@/services/avatar';
 
 export interface SteemUser {
   username: string;
@@ -33,14 +34,14 @@ export const useAppStore = create<AppState>((set) => ({
     // Set immediately with fallback avatar so UI doesn't wait
     const fallbackUser: SteemUser = {
       username,
-      avatar: `https://steemitimages.com/u/${username}/avatar`,
+      avatar: getAvatarUrl(username),
       loginMethod,
     };
     sessionStorage.setItem('wox_user', JSON.stringify(fallbackUser));
     sessionStorage.setItem('wox_jwt', jwt);
     set({ currentUser: fallbackUser, jwt });
 
-    // Then fetch real profile image and update
+    // Then fetch real profile image from blockchain and update
     try {
       const [profile] = await fetchAccounts([username]);
       if (profile?.profileImage) {
@@ -55,7 +56,7 @@ export const useAppStore = create<AppState>((set) => ({
   logout: () => {
     sessionStorage.removeItem('wox_user');
     sessionStorage.removeItem('wox_jwt');
-    sessionStorage.removeItem('hempire_posting_key');
+    sessionStorage.removeItem('posting_key');
     set({ currentUser: null, jwt: null });
   },
 }));

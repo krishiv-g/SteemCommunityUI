@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { fetchFollowers, fetchFollowing, type FollowEntry } from '@/services/steem.accounts';
+import { fetchFollowers, fetchFollowing, type FollowEntry, fetchAccounts } from '@/services/steem.accounts';
+import { getAvatarUrl } from '@/services/avatar';
 import { Loader2 } from 'lucide-react';
 
 interface FollowListDialogProps {
@@ -11,8 +12,12 @@ interface FollowListDialogProps {
   type: 'followers' | 'following';
 }
 
+interface FollowEntryWithProfile extends FollowEntry {
+  profileImage?: string;
+}
+
 export function FollowListDialog({ open, onOpenChange, username, type }: FollowListDialogProps) {
-  const [entries, setEntries] = useState<FollowEntry[]>([]);
+  const [entries, setEntries] = useState<FollowEntryWithProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
@@ -22,7 +27,18 @@ export function FollowListDialog({ open, onOpenChange, username, type }: FollowL
       const fn = type === 'followers' ? fetchFollowers : fetchFollowing;
       const result = await fn(username, start, 50);
       const newItems = start ? result.slice(1) : result;
-      setEntries(prev => [...prev, ...newItems]);
+      
+      // Fetch profile images for new items
+      const usernames = newItems.map(item => type === 'followers' ? item.follower : item.following);
+      const profiles = await fetchAccounts(usernames);
+      const profileMap = new Map(profiles.map(p => [p.account, p.profileImage]));
+      
+      const enrichedItems: FollowEntryWithProfile[] = newItems.map(item => ({
+        ...item,
+        profileImage: profileMap.get(type === 'followers' ? item.follower : item.following),
+      }));
+      
+      setEntries(prev => [...prev, ...enrichedItems]);
       setHasMore(newItems.length >= 49);
     } catch {
       setHasMore(false);
@@ -64,7 +80,7 @@ export function FollowListDialog({ open, onOpenChange, username, type }: FollowL
                 className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
               >
                 <img
-                  src={`https://steemitimages.com/u/${name}/avatar`}
+                  src={getAvatarUrl(name)}
                   alt=""
                   className="h-9 w-9 rounded-full bg-muted"
                 />

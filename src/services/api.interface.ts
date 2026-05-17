@@ -73,7 +73,7 @@ export interface Tag {
 
 export interface Notification {
   id: string;
-  type: 'vote' | 'comment' | 'mention' | 'follow';
+  type: 'vote' | 'mention' | 'reply' | 'follow' | 'resteem';
   actor: User;
   postId?: string;
   postTitle?: string;
@@ -160,7 +160,7 @@ export interface ApiService {
   getUser(username: string): Promise<User>;
   getUserPosts(username: string): Promise<Post[]>;
   getTags(): Promise<Tag[]>;
-  getNotifications(): Promise<Notification[]>;
+  getNotifications(username?: string): Promise<Notification[]>;
   getWalletHistory(): Promise<WalletTransaction[]>;
   getCommunity(): Promise<Community>;
   getCommunityMembers(): Promise<User[]>;

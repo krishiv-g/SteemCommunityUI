@@ -14,7 +14,7 @@ export function isKeychainAvailable(): boolean {
  * Generate a timestamped login message
  */
 export function generateLoginMessage(): string {
-  return `Login to World Of Xpilar ${Date.now()}`;
+  return `Login to SteemDev ${Date.now()}`;
 }
 
 /**
@@ -41,7 +41,6 @@ export function signWithKeychain(username: string, message: string): Promise<str
  */
 function wifToPrivateKey(wif: string): Uint8Array {
   const decoded = bs58.decode(wif);
-  // WIF: [version(1), privKey(32), optional-compression(1), checksum(4)]
   return decoded.slice(1, 33);
 }
 
@@ -61,7 +60,6 @@ function publicKeyToSteem(pubKeyBytes: Uint8Array): string {
  * Keys never leave the browser.
  */
 export async function verifyPostingKey(username: string, wif: string): Promise<boolean> {
-  // Fetch account's posting public keys from blockchain
   const rawAccounts = await steemRpc<any[]>('condenser_api.get_accounts', [[username]]);
   if (!rawAccounts || rawAccounts.length === 0) {
     throw new Error('Account not found on Steem blockchain');
@@ -81,19 +79,12 @@ export async function verifyPostingKey(username: string, wif: string): Promise<b
 }
 
 /**
- * Register or update login in Supabase, returns JWT token
+ * Register or update login via the backend API, returns JWT token
  */
 export async function registerLogin(username: string): Promise<string> {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-  const res = await fetch(`${supabaseUrl}/functions/v1/steem-auth`, {
+  const res = await fetch('/api/steem-auth', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${supabaseKey}`,
-      'apikey': supabaseKey,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username }),
   });
 
